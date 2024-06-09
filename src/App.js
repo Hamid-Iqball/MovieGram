@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const tempMovieData = [
   {
@@ -46,88 +46,192 @@ const tempWatchedData = [
     userRating: 9,
   },
 ];
-function App() {
+
+const average = (arr) =>
+  arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
+const KEY = "8c86df92";
+
+export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
-  const [isOpen1, setIsOpen1] = useState(false);
-  const [isOpen2, setIsOpen2] = useState(false);
 
   return (
     <>
       {/* Nav Bar */}
-      <nav className="flex flex-col space-y-4 md:space-y-0 p-4 md:flex-row md:justify-between md:items-center bg-yellow-400 text-yellow-800 shadow-md ">
-        <div className="flex space-x-2 text-center p-2">
-          <span className="text-3xl">🍿</span>
-          <h1 className="font-bold text-3xl tracking-wide">MovieGram</h1>
-        </div>
-        <input
-          type="text"
-          placeholder="Search movie..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className=" text-neutral-900 rounded-xl border-0 pl-4 p-2  mr-4 md:p-1  bg-yellow-100 md:w-1/3"
-        />
-        <p className="text-center text-xl p-2">
-          Found <strong>{movies.length} </strong> movies
-        </p>
-      </nav>
+
+      <NavBar>
+        <>
+          <Logo />
+          <Search query={query} setQuery={setQuery} />
+          <NumResult movies={movies} />
+        </>
+      </NavBar>
 
       {/* Main */}
-      <main className="h-screen mx-auto bg-yellow-100 ">
-        {/* box-1 */}
-        <section className=" md:w-3/4 h-screen my-0 mx-auto grid sm:grid-cols-2 grid-cols-1">
-          <div className=" bg-yellow-200 m-4  rounded-xl text-yellow-800 relative">
-            <button
-              onClick={() => setIsOpen1((open) => !open)}
-              className="absolute top-2 right-2 p-4 h-4 w-5 text-center  bg-yellow-50"
-            >
-              {!isOpen1 ? "-" : "+"}
-            </button>
-
-            {!isOpen1 && (
-              <ul className=" list-none  ">
-                {movies.map((movie) => (
-                  <li
-                    key={movie.imdbID}
-                    className=" grid grid-cols-2 pl-6 pt-3 pb-1 border-b-2  my-0 mx-auto"
-                  >
-                    <div className="col-span-1 row-span-1">
-                      <img
-                        src={movie.Poster}
-                        alt={`${movie.Title}`}
-                        className="w-20 h-30 object-cover"
-                      />
-                    </div>
-
-                    <p className="flex flex-col justify-arround text-2xl  tracking-widest ">
-                      <h3 className="mb-auto font-bold"> {movie.Title}</h3>
-                      <p className="mt-0">
-                        <span>🗓</span>
-                        <span>{movie.Year}</span>
-                      </p>
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {/* Box-2 */}
-          <div className=" bg-yellow-200 m-4 rounded-xl relative">
-            <button
-              onClick={() => setIsOpen2((open) => !open)}
-              className=" absolute top-2 right-2 h-2 w-2 rounded-full bg-yellow-50 text-xl font-bold"
-            >
-              {!isOpen2 ? "-" : "+"}
-            </button>
-
-            {!isOpen2 && <div> Hamid</div>}
-          </div>
-        </section>
-      </main>
+      <Main>
+        <>
+          <Box>
+            <MoviesList movies={movies} />
+          </Box>
+          <Box>
+            <div className=" bg-yellow-200 m-4  rounded-xl text-yellow-800 relative">
+              <WatchedSummary watched={watched} />
+              <WatchedMovieList watched={watched} />
+            </div>
+          </Box>
+        </>
+      </Main>
     </>
   );
 }
 
-export default App;
+function NavBar({ children }) {
+  return (
+    <nav className="flex flex-col space-y-4 md:space-y-0 p-4 md:flex-row md:justify-between md:items-center bg-yellow-400 text-yellow-800  border-b  border-yellow-600 shadow-xl">
+      {children}
+    </nav>
+  );
+}
+
+function Logo() {
+  return (
+    <div className="flex space-x-2 text-center p-2">
+      <span className="text-3xl">🍿</span>
+      <h1 className="font-bold text-3xl tracking-wide">MovieGram</h1>
+    </div>
+  );
+}
+
+function Search({ query, setQuery }) {
+  return (
+    <input
+      type="text"
+      placeholder="Search movie..."
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      className=" text-neutral-900 rounded-xl border-0 pl-4 p-2  mr-4 md:p-1  bg-yellow-100 md:w-1/3"
+    />
+  );
+}
+
+function NumResult({ movies }) {
+  return (
+    <p className="text-center text-xl p-2">
+      Found <strong>{movies.length} </strong> movies
+    </p>
+  );
+}
+
+function Main({ children }) {
+  return (
+    <main className="h-screen mx-auto bg-yellow-100">
+      <section className=" md:w-3/4 h-screen my-0 mx-auto grid sm:grid-cols-2 grid-cols-1">
+        {children}
+      </section>
+    </main>
+  );
+}
+function Box({ children }) {
+  const [isOpen, setIsOpen] = useState(true);
+  return <div>{isOpen && children};</div>;
+}
+
+function MoviesList({ movies }) {
+  return (
+    <div className=" bg-yellow-200 m-4  rounded-xl text-yellow-800 relative">
+      <ul className=" list-none  ">
+        {movies.map((movie) => (
+          <Movie movie={movie} key={movie.imdbID} />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function Movie({ movie }) {
+  return (
+    <li
+      key={movie.imdbID}
+      className=" grid grid-cols-2 pl-6 pt-3 pb-1 border-b-2  my-0 mx-auto"
+    >
+      <div className="col-span-1 row-span-1">
+        <img
+          src={movie.Poster}
+          alt={`${movie.Title}`}
+          className="w-20 h-30 object-cover"
+        />
+      </div>
+
+      <p className="flex flex-col justify-arround text-2xl  tracking-widest ">
+        <h3 className="mb-auto font-semibold"> {movie.Title}</h3>
+        <p className="mt-0">
+          <span>🗓</span>
+          <span>{movie.Year}</span>
+        </p>
+      </p>
+    </li>
+  );
+}
+function WatchedMovieList({ watched }) {
+  return (
+    <ul className=" list-none  ">
+      {watched.map((movie) => (
+        <WatchedMovie movie={movie} key={movie.imdbID} />
+      ))}
+    </ul>
+  );
+}
+function WatchedMovie({ movie }) {
+  return (
+    <li
+      key={movie.imdbID}
+      className=" grid grid-cols-2 pl-6 pt-3 pb-1 border-b-2  my-0 mx-auto"
+    >
+      <div className="col-span-1 row-span-1">
+        <img
+          src={movie.Poster}
+          alt={`${movie.Title}`}
+          className="w-20 h-30 object-cover"
+        />
+      </div>
+
+      <p className="flex flex-col justify-arround text-2xl  tracking-widest ">
+        <h3 className="mb-auto font-semibold"> {movie.Title}</h3>
+        <p className="mt-0">
+          <span>🗓</span>
+          <span>{movie.Year}</span>
+        </p>
+      </p>
+    </li>
+  );
+}
+function WatchedSummary({ watched }) {
+  const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
+  const avgUserRating = average(watched.map((movie) => movie.userRating));
+  const avgRuntime = average(watched.map((movie) => movie.runtime));
+  return (
+    <div className=" p-4 pl-6 text-start font-semibold border-b border-yellow-800  rounded-xl shadow-xl">
+      {" "}
+      <h2 className="text-xl">MOVIES YOU WATCHED</h2>
+      <div className="flex justify-between font-semiBold mt-2 text-sm">
+        <p>
+          <span>#️⃣</span>
+          <span>{watched.length} Movies </span>
+        </p>
+        <p>
+          <span>🌟</span>
+          <span>{avgImdbRating}</span>
+        </p>
+        <p>
+          <span>⭐</span>
+          <span>{avgUserRating}</span>
+        </p>
+        <p>
+          <span>⏳ </span>
+          <span>{avgRuntime} min</span>
+        </p>
+      </div>
+    </div>
+  );
+}
